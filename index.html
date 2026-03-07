@@ -4,97 +4,122 @@
     <meta charset="UTF-8">
     <title>Recipe Finder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Bootstrap -->
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --accent: #27ae60; --dark: #2c3e50; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; color: var(--dark); }
+        
+        .header-section {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200');
+            background-size: cover; background-position: center; color: white; padding: 70px 0;
+            margin-bottom: 40px; border-radius: 0 0 25px 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .card { border: none; border-radius: 12px; transition: 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.05); height: 100%; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .card-img-top { height: 190px; object-fit: cover; border-radius: 12px 12px 0 0; }
+        .btn-success { background-color: var(--accent); border: none; }
+        .section-title { font-weight: 800; border-left: 5px solid var(--accent); padding-left: 15px; }
+    </style>
 </head>
 <body>
 
-<h2 class="text-center mt-3 text-success">🍴 Recipe Finder App</h2>
-
-<div class="container mt-4">
-
-    <!-- Search -->
-    <div class="input-group mb-4">
-        <input type="text" id="searchText" class="form-control" placeholder="Enter recipe name" onkeyup="loadRecipe()"/>
-        <button class="btn btn-success" onclick="loadRecipe()">Search</button>
+<div class="header-section text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-2">🍴 Recipe Finder</h1>
+        <p class="mb-4 text-light opacity-75">Discover popular dishes and global favorites</p>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-7">
+                <div class="input-group input-group-lg shadow">
+                    <input type="text" id="searchText" class="form-control border-0" placeholder="Search recipes..." onkeyup="loadRecipe()"/>
+                    <button class="btn btn-success px-4" onclick="loadRecipe()">Search</button>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- Result -->
-    <div class="row" id="recipeContainer"></div>
-
+<div class="container pb-5">
+    <h3 id="displayTitle" class="section-title mb-4">Popular Recipes</h3>
+    <div class="row g-4" id="recipeContainer"></div>
 </div>
 
 <script src="./Scripts/index.js"></script>
 
 <script>
-    function loadRecipe() {
-        getData().then(data => {
+    // Load popular recipes when browser opens
+    window.onload = function() {
+        loadRecipe();
+    };
 
+    function loadRecipe() {
+        let input = document.getElementById("searchText").value;
+        let title = document.getElementById("displayTitle");
+
+        if (input.trim() === "") {
+            title.innerText = "Popular Recipes";
+        } else {
+            title.innerText = "Search Results";
+        }
+
+        getData().then(data => {
             let container = document.getElementById("recipeContainer");
             container.innerHTML = "";
 
             if (data && data.meals) {
-
                 data.meals.forEach(meal => {
                     container.innerHTML += `
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
+                        <div class="col-lg-3 col-md-4 col-sm-6">
+                            <div class="card">
                                 <img src="${meal.strMealThumb}" class="card-img-top">
-                                <div class="card-body">
-                                    <h5 class="card-title">${meal.strMeal}</h5>
-                                    <p class="card-text">
-                                        Category: ${meal.strCategory}
-                                    </p>
-                                     <button class="btn btn-primary btn-sm" onclick="viewDetails('${meal.idMeal}')">
-                                    View Details
-                                </button>
+                                <div class="card-body d-flex flex-column">
+                                    <h6 class="card-title fw-bold text-dark mb-1 text-truncate">${meal.strMeal}</h6>
+                                    <p class="text-muted small mb-3">${meal.strCategory} | ${meal.strArea}</p>
+                                    <button class="btn btn-outline-success btn-sm mt-auto" onclick="viewDetails('${meal.idMeal}')">
+                                        View Details
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
-
             } else {
-                container.innerHTML = "<h5>No recipe found!</h5>";
+                container.innerHTML = "<div class='text-center py-5 w-100'><p class='text-muted'>No results found.</p></div>";
             }
         });
     }
-    
+
     function viewDetails(idMeal) {
-        getData().then(data => {
-
+        // Fetch detailed data for a specific meal
+        fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${idMeal}`)
+        .then(res => res.json())
+        .then(data => {
             let container = document.getElementById("recipeContainer");
-            container.innerHTML = "";
+            let title = document.getElementById("displayTitle");
+            let meal = data.meals[0];
 
-            if (data && data.meals) {
-
-              let meal=  data.meals.find(meal => meal.idMeal===idMeal);
-              container.innerHTML = `
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
-                                <img src="${meal.strMealThumb}" class="card-img-top">
-                                <div class="card-body">
-                                    <h5 class="card-title">${meal.strMeal}</h5>
-                                    <p class="card-text">
-                                        Category: ${meal.strCategory}
-                                    </p>
-                                    <p> ${meal.strInstructions}</p>
-                                     <button class="btn btn-primary btn-sm" onclick="loadRecipe()">
-                                    Back
-                                </button>
-                                </div>
+            title.innerText = "Recipe Details";
+            container.innerHTML = `
+                <div class="col-12">
+                    <button class="btn btn-dark btn-sm mb-4" onclick="loadRecipe()">← Back to List</button>
+                    <div class="card overflow-hidden">
+                        <div class="row g-0">
+                            <div class="col-md-5">
+                                <img src="${meal.strMealThumb}" class="img-fluid h-100 w-100" style="object-fit:cover;">
+                            </div>
+                            <div class="col-md-7 p-4 p-md-5">
+                                <h1 class="fw-bold mb-2">${meal.strMeal}</h1>
+                                <span class="badge bg-success mb-4 px-3 py-2">${meal.strCategory}</span>
+                                <h5 class="fw-bold">Instructions</h5>
+                                <p style="white-space: pre-line; line-height: 1.8; color: #444;">${meal.strInstructions}</p>
                             </div>
                         </div>
-                    `;
-               
-
-            } else {
-                container.innerHTML = "<h5>No recipe found!</h5>";
-            }
+                    </div>
+                </div>`;
+            window.scrollTo({ top: 300, behavior: 'smooth' });
         });
     }
 </script>
-
 </body>
 </html>

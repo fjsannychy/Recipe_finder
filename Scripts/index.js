@@ -1,15 +1,19 @@
 async function getData() {
+    let input = document.getElementById("searchText");
+    let recipeName = input.value.trim();
 
-    let recipeName = document.getElementById("searchText").value;
+    // Use 'a' as default search to show popular recipes on startup
+    let query = recipeName === "" ? "a" : recipeName;
 
-    let resp = await fetch(
-        `https://www.themealdb.com/api/json/v1/1/search.php?s=${recipeName}`
-    );
-
-    if (resp.ok) {
-        return resp.json();
-    } else {
-        return null;
+    try {
+        let resp = await fetch(
+            `https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`
+        );
+        if (resp.ok) {
+            return await resp.json();
+        }
+    } catch (error) {
+        console.error("API Error:", error);
     }
+    return null;
 }
-
